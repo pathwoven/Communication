@@ -20,6 +20,7 @@ func main() {
 	// 初始化路由
 	log.Println("初始化路由...")
 	r := gin.Default()
+	r.Use(config.Cors())
 	router.SetupRouter(r)
 
 	// 启动服务

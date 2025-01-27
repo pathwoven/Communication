@@ -8,23 +8,23 @@ const routes = [
         component: () => import('@/views/Home.vue'),
     },
     {
-        path: '/login',
-        component: () => import('@/views/Login/Layout.vue'),
+        path: '/auth',
+        component: () => import('@/views/Auth/Layout.vue'),
         children: [
             {
-                path: '',
+                path: 'login',
                 name: 'Login',
-                component: () => import('@/views/Login/Login.vue'),
+                component: () => import('@/views/Auth/Login.vue'),
             },
             {
                 path: 'register',
                 name: 'Register',
-                component: () => import('@/views/Login/Register.vue'),
+                component: () => import('@/views/Auth/Register.vue'),
             },
             {
                 path: 'forget',
                 name: 'Forget',
-                component: () => import('@/views/Login/Forget.vue'),
+                component: () => import('@/views/Auth/Forget.vue'),
             },
         ]
     }
