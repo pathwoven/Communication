@@ -4,40 +4,34 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
+	"gopkg.in/yaml.v3"
 )
 
+type DatabaseConfig struct {
+	DBUser     string `yaml:"user"`
+	DBPassword string `yaml:"password"`
+	DBHost     string `yaml:"host"`
+	DBPort     string `yaml:"port"`
+	DBName     string `yaml:"database"`
+}
+type ServerConfig struct {
+	ServerPort string `yaml:"port"`
+}
 type Config struct {
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBName     string
-	ServerPort string
+	DatabaseConfig `yaml:"database"`
+	ServerConfig   `yaml:"server"`
 }
 
 var AppConfig Config
 
 func InitConfig() {
-	// 加载.env文件
-	err := godotenv.Load()
+	// 加载config.yml文件
+	data, err := os.ReadFile("config/config.yml")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("无法读取配置文件: ", err)
 	}
-	AppConfig = Config{
-		DBUser:     getEnv("DB_USER", ""),
-		DBPassword: getEnv("DB_PASSWORD", ""),
-		DBHost:     getEnv("DB_HOST", ""),
-		DBPort:     getEnv("DB_PORT", ""),
-		DBName:     getEnv("DB_NAME", ""),
-		ServerPort: getEnv("SERVER_PORT", "8080"),
+	err = yaml.Unmarshal(data, &AppConfig)
+	if err != nil {
+		log.Fatal("配置文件解析失败: ", err)
 	}
-}
-
-func getEnv(key string, defaultValue string) string {
-	value, exists := os.LookupEnv(key)
-	if exists {
-		return value
-	}
-	return defaultValue
 }
