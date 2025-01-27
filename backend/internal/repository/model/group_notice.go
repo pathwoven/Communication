@@ -10,3 +10,7 @@ type GroupNotice struct {
 	ContentType uint8     `gorm:"type:tinyint;not null"`
 	CreateTime  time.Time `gorm:"not null"`
 }
+
+func (GroupNotice) TableComment() string {
+	return "群公告"
+}

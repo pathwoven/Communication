@@ -11,3 +11,7 @@ type Entity struct {
 	Introduction string `gorm:"type:varchar(255);default:null"`
 	GroupOwnerID uint32 `gorm:"type:int unsigned;default:null"`
 }
+
+func (Entity) TableComment() string {
+	return "记录个人账户及群聊账户"
+}

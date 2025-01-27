@@ -17,3 +17,7 @@ type Chat struct {
 	Tag2ID      uint      `gorm:"type:int unsigned;default:null"`
 	Tag3ID      uint      `gorm:"type:int unsigned;default:null"`
 }
+
+func (Chat) TableComment() string {
+	return "聊天列表"
+}

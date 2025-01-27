@@ -8,3 +8,7 @@ type Contact struct {
 	IsBlacklisted bool   `gorm:"type:tinyint(1);not null;default:false"`
 	BackgroundImg string `gorm:"type:varchar(255);default:null"`
 }
+
+func (Contact) TableComment() string {
+	return "记录好友与群组的关系"
+}
