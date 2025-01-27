@@ -14,13 +14,15 @@ import (
 var DB *gorm.DB
 
 func InitMysql() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
 		config.AppConfig.DBUser,
 		config.AppConfig.DBPassword,
 		config.AppConfig.DBHost,
 		config.AppConfig.DBPort,
 		config.AppConfig.DBName,
+		config.AppConfig.DBCharset,
 	)
+	log.Println(dsn)
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,

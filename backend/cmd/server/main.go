@@ -24,7 +24,7 @@ func main() {
 
 	// 启动服务
 	log.Println("服务器开始监听" + config.AppConfig.ServerPort)
-	if err := r.Run(config.AppConfig.ServerPort); err != nil {
+	if err := r.Run(":" + config.AppConfig.ServerPort); err != nil {
 		log.Fatal("服务器启动失败: ", err)
 	}
 }

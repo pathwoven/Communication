@@ -1,6 +1,6 @@
 package model
 
 type MultipleMessage struct {
-	ID        int `gorm:"primaryKey;autoIncrement"`
-	MessageID int `gorm:"primaryKey;not null"`
+	ID        int `gorm:"type:int;primaryKey;autoIncrement"`
+	MessageID int `gorm:"type:int;primaryKey;not null"`
 }
