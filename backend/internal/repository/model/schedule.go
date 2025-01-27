@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Schedules struct {
+type Schedule struct {
 	ID         int       `gorm:"primaryKey;autoIncrement"`
 	UserID     int       `gorm:"not null;index:user_id_idx"`
 	Title      string    `gorm:"type:varchar(255);not null"`

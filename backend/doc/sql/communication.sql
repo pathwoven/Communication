@@ -325,10 +325,10 @@ CREATE TABLE `recycle_bin`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for schedules
+-- Table structure for schedule
 -- ----------------------------
-DROP TABLE IF EXISTS `schedules`;
-CREATE TABLE `schedules`  (
+DROP TABLE IF EXISTS `schedule`;
+CREATE TABLE `schedule`  (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
