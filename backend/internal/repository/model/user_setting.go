@@ -3,12 +3,12 @@ package model
 import "time"
 
 type UserSetting struct {
-	UserID               int       `gorm:"type:int;primaryKey;not null"`
+	UserID               uint32    `gorm:"type:int unsigned;primaryKey;not null"`
 	Birthday             time.Time `gorm:"default:null"`
-	Sex                  int       `gorm:"type:tinyint(3);not null;default:2;comment:0表示男，1表示女，2表示未知"`
-	FontSize             int       `gorm:"type:int;not null;default:16"`
+	Sex                  uint8     `gorm:"type:tinyint(3);not null;default:2;comment:0表示男，1表示女，2表示未知"`
+	FontSize             uint32    `gorm:"type:int unsigned;not null;default:16"`
 	FontStyle            string    `gorm:"type:varchar(50);default:null"`
-	Theme                int       `gorm:"type:tinyint;not null;default:0"`
+	Theme                uint8     `gorm:"type:tinyint;not null;default:0"`
 	Background           string    `gorm:"type:varchar(255);default:null;comment:背景图片的存储地址"`
 	ReceiveNotice        bool      `gorm:"type:tinyint(1);not null;default:true;comment:0表示没有新消息提醒，1表示有"`
 	NoticeSound          string    `gorm:"type:varchar(255);default:null;comment:提示音的存储地址"`

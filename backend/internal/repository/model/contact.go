@@ -1,10 +1,10 @@
 package model
 
 type Contact struct {
-	UserID        int    `gorm:"type:int;primaryKey;not null"`
-	TargetID      int    `gorm:"type:int;primaryKey;not null"`
+	UserID        uint32 `gorm:"type:int unsigned;primaryKey;not null"`
+	TargetID      uint32 `gorm:"type:int unsigned;primaryKey;not null"`
 	Remark        string `gorm:"type:varchar(255);default:null"`
-	DivideID      int    `gorm:"type:int;not null"`
+	DivideID      uint32 `gorm:"type:int unsigned;not null"`
 	IsBlacklisted bool   `gorm:"type:tinyint(1);not null;default:false"`
 	BackgroundImg string `gorm:"type:varchar(255);default:null"`
 }

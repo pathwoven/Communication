@@ -1,7 +1,7 @@
 package model
 
 type MessageDeleted struct {
-	UserID         int `gorm:"type:int;primaryKey;not null"`
-	StartMessageID int `gorm:"type:int;primaryKey;not null"`
-	EndMessageID   int `gorm:"type:int;primaryKey;not null"`
+	UserID         uint32 `gorm:"type:int unsigned;primaryKey;not null"`
+	StartMessageID uint32 `gorm:"type:int unsigned;primaryKey;not null"`
+	EndMessageID   uint32 `gorm:"type:int unsigned;primaryKey;not null"`
 }
