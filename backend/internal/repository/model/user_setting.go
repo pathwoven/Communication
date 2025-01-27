@@ -4,7 +4,7 @@ import "time"
 
 type UserSetting struct {
 	UserID               uint32    `gorm:"type:int unsigned;primaryKey;not null"`
-	Birthday             time.Time `gorm:"default:null"`
+	Birthday             time.Time `gorm:"type:date;default:null"`
 	Sex                  uint8     `gorm:"type:tinyint(3);not null;default:2;comment:0表示男，1表示女，2表示未知"`
 	FontSize             uint8     `gorm:"type:tinyint;not null;default:16"`
 	FontStyle            string    `gorm:"type:varchar(50);default:null"`
