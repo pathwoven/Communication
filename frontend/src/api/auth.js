@@ -14,3 +14,18 @@ export const login = async (displayId, password) => {
     return { success: false, data: null };
   }
 };
+
+export const register = async (name, password, email, displayId, sex, birthday, signature) => {
+  try{
+    const response = await apiClient.post('/auth/register',{name, password,email,displayId,sex,birthday,signature});
+    if(response.status !== 200){
+      console.log('注册失败:', response.data.message);
+      return {success: false, data: null};
+    }else{
+      return {success: true};
+    }
+  }catch (error){
+    console.error('注册失败:', error);
+    return {success: false, data: null};
+  }
+};
