@@ -1,16 +1,18 @@
 package main
 
 import (
-	"log"
-
 	"Communication/config"
 	"Communication/internal/api/router"
 	"Communication/internal/repository"
+	"Communication/internal/utils"
+
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// utils.Test() // todo debug
 	// 初始化配置
 	log.Println("初始化配置...")
 	config.InitConfig()
@@ -22,6 +24,8 @@ func main() {
 	r := gin.Default()
 	r.Use(config.Cors())
 	router.SetupRouter(r)
+	// 初始化session store
+	utils.InitSessionStore()
 
 	// 启动服务
 	log.Println("服务器开始监听" + config.AppConfig.ServerPort)

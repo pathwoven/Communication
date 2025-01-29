@@ -1,14 +1,31 @@
 package utils
 
 import (
+	"Communication/config"
+	"encoding/base64"
+	"log"
 	"net/http"
 	"sync"
 
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
-var sessionStore = sessions.NewCookieStore(securecookie.GenerateRandomKey(32), securecookie.GenerateRandomKey(32))
+var sessionStore sessions.Store
+
+func InitSessionStore() {
+	sessionStore = sessions.NewCookieStore(
+		[]byte(decodeBase64(config.AppConfig.SecurityConfig.SessionConfig.HashKey)),
+		[]byte(decodeBase64(config.AppConfig.SecurityConfig.SessionConfig.BlockKey)),
+	)
+}
+
+func decodeBase64(s string) []byte {
+	bytes, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		log.Fatalf("解码密钥失败: %v", err)
+	}
+	return bytes
+}
 
 // 全局 map 用于存储 user_id 和 session的映射
 var userSessions = struct {
@@ -55,6 +72,15 @@ func SetUserSession(r *http.Request, w http.ResponseWriter, userID uint32) error
 	}
 	// 设置user_id
 	setUserID(session, userID)
+	// 配置Cookie
+	session.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400,                 // Session有效期（秒）
+		HttpOnly: true,                  // 防止XSS攻击
+		Secure:   true,                  // 如果是HTTPS，设置为true
+		SameSite: http.SameSiteNoneMode, // 支持跨域
+	}
+
 	// 保存session
 	err = saveSession(r, w, session)
 	if err != nil {
@@ -66,9 +92,11 @@ func SetUserSession(r *http.Request, w http.ResponseWriter, userID uint32) error
 // GetUserID 从 http 中获取session，从而返回 user_id
 func GetUserID(r *http.Request) (uint32, bool) {
 	session, err := getUserSession(r)
-	if err == nil {
+	log.Printf("Session : %v", session)
+	if err != nil {
 		return 0, false
 	}
+	log.Printf("Session values: %v", session.Values)
 	userID, ok := session.Values["user_id"].(uint32)
 	return userID, ok
 }
@@ -76,6 +104,7 @@ func GetUserID(r *http.Request) (uint32, bool) {
 // setUserID 在 session 中设置 user_id
 func setUserID(session *sessions.Session, userID uint32) {
 	session.Values["user_id"] = userID
+	log.Printf("Session values: %v", session.Values)
 	registerUserSession(userID, session) // 保存映射
 }
 
