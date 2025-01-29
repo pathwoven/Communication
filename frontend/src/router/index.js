@@ -27,6 +27,14 @@ const routes = [
                 component: () => import('@/views/Auth/Forget.vue'),
             },
         ]
+    },
+    {
+        path: '/chat',
+        component: () => import('@/views/Chat.vue'),
+    },
+    {
+        path: '/test',   // debug todo
+        component: () => import('@/views/Test.vue'),
     }
 ];
 

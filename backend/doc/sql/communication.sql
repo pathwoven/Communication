@@ -29,7 +29,7 @@ CREATE TABLE `chat`  (
   `last_message` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `last_time` datetime(3) NULL DEFAULT NULL,
   `is_pinned` tinyint(1) NOT NULL DEFAULT 0,
-  `is_mute` tinyint(1) NOT NULL DEFAULT 0,
+  `is_muted` tinyint(1) NOT NULL DEFAULT 0,
   `is_blocked` tinyint(1) NOT NULL DEFAULT 0,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
   `tag1_id` int UNSIGNED NULL DEFAULT NULL,

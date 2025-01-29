@@ -21,6 +21,6 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
-  ],
+, "src/components/common/eventBus.js", "src/store/modules/overlayStore.js"  ],
   "exclude": ["node_modules"]
 }

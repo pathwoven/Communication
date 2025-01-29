@@ -3,6 +3,7 @@ package auth
 import (
 	"Communication/internal/repository"
 	"Communication/internal/repository/model"
+	"Communication/internal/utils"
 	"log"
 	"net/http"
 	"time"
@@ -30,8 +31,6 @@ func LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "账号或密码错误"})
 		return
 	}
-	// 检查是否已登录
-	// todo
 	// 查询user_setting表
 	var dbUserSetting model.UserSetting
 	result = repository.DB.Where("user_id = ?", dbEntity.ID).First(&dbUserSetting)
@@ -46,6 +45,19 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 账号密码正确，修改登录信息
+	// 检查是否有其他session是同一个user_id  todo
+	// if session, ok := utils.GetUserIDSession(dbEntity.ID); ok {
+	// 	// 删除旧session todo
+	// 	log.Println("删除旧session：", session)
+	// 	utils.DeleteSession(c.Request, c.Writer, session, dbEntity.ID)
+	// }
+	// 生成用户session，写入响应中
+	if err := utils.SetUserSession(c.Request, c.Writer, dbEntity.ID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		log.Println("写入session失败", err)
+		return
+	}
+
 	// 获取当前时间
 	currentTime := time.Now()
 	dbUserSetting.LastLoginTime = currentTime
@@ -75,8 +87,6 @@ func LoginHandler(c *gin.Context) {
 	}
 	// 提交事务
 	tx.Commit()
-
-	// 生成session
 
 	// 登录成功
 	c.JSON(http.StatusOK, gin.H{"data": dbUserSetting})

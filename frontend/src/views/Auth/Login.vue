@@ -12,7 +12,7 @@ const login = async () =>{
   const response = await authApi.login(displayId.value, password.value);
   if(response.success){
    console.log("登录成功");
-   router.push('/'); 
+   //router.push('/'); 
   }else{
    console.log("登录失败");
   }

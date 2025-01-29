@@ -10,12 +10,12 @@ type Chat struct {
 	LastMessage string    `gorm:"type:varchar(255);default:null"`
 	LastTime    time.Time `gorm:"default:null"`
 	IsPinned    bool      `gorm:"type:tinyint(1);not null;default:false"`
-	IsMute      bool      `gorm:"type:tinyint(1);not null;default:false"`
+	IsMuted     bool      `gorm:"type:tinyint(1);not null;default:false"`
 	IsBlocked   bool      `gorm:"type:tinyint(1);not null;default:false"`
 	IsDeleted   bool      `gorm:"type:tinyint(1);not null;default:false"`
-	Tag1ID      uint      `gorm:"type:int unsigned;default:null"`
-	Tag2ID      uint      `gorm:"type:int unsigned;default:null"`
-	Tag3ID      uint      `gorm:"type:int unsigned;default:null"`
+	Tag1        string    `gorm:"type:varchar(20);default:null"`
+	Tag2        string    `gorm:"type:varchar(20);default:null"`
+	Tag3        string    `gorm:"type:varchar(20);default:null"`
 }
 
 func (Chat) TableComment() string {

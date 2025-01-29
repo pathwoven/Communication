@@ -19,9 +19,17 @@ type DatabaseConfig struct {
 type ServerConfig struct {
 	ServerPort string `yaml:"port"`
 }
+type SecurityConfig struct {
+	SessionConfig `yaml:"session"`
+}
+type SessionConfig struct {
+	HashKey  string `yaml:"hash-key"`
+	BlockKey string `yaml:"block-key"`
+}
 type Config struct {
 	DatabaseConfig `yaml:"mysql"`
 	ServerConfig   `yaml:"server"`
+	SecurityConfig `yaml:"security"`
 }
 
 var AppConfig Config
