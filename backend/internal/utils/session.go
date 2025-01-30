@@ -92,11 +92,9 @@ func SetUserSession(r *http.Request, w http.ResponseWriter, userID uint32) error
 // GetUserID 从 http 中获取session，从而返回 user_id
 func GetUserID(r *http.Request) (uint32, bool) {
 	session, err := getUserSession(r)
-	log.Printf("Session : %v", session)
 	if err != nil {
 		return 0, false
 	}
-	log.Printf("Session values: %v", session.Values)
 	userID, ok := session.Values["user_id"].(uint32)
 	return userID, ok
 }

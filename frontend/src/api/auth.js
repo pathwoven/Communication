@@ -16,9 +16,9 @@ export const login = async (display_id, password) => {
   }
 };
 
-export const register = async (name, password, email, displayId, sex, birthday, signature) => {
+export const register = async (name, password, email, display_id, sex, birthday, signature) => {
   try{
-    const response = await apiClient.post('/api/v1/auth/register',{name, password,email,displayId,sex,birthday,signature});
+    const response = await apiClient.post('/api/v1/auth/register',{name, password,email,display_id,sex,birthday,signature});
     if(response.status !== 200){
       console.log('注册失败:', response.data.message);
       return {success: false, data: null};

@@ -108,7 +108,7 @@ export const readChat = async (chat_id, is_read) => {
 // 为聊天添加标签
 export const addTagToChat = async (chat_id, tag_name) => {
   try {
-    const response = await apiClient.post(`/api/v1/chat/list/addTag`, { chat_id, tag_name });
+    const response = await apiClient.post(`/api/v1/chat/list/add-tag`, { chat_id, tag_name });
     if (response.status !== 200) {
       console.log('为聊天添加标签失败:', response.data.message);
       return { success: false };
@@ -123,7 +123,7 @@ export const addTagToChat = async (chat_id, tag_name) => {
 // 为聊天删除标签
 export const removeTagFromChat = async (chat_id, tag_name) => {
   try {
-    const response = await apiClient.post(`/api/v1/chat/list/removeTag`, { chat_id, tag_name });
+    const response = await apiClient.post(`/api/v1/chat/list/remove-tag`, { chat_id, tag_name });
     if (response.status !== 200) {
       console.log('为聊天删除标签失败:', response.data.message);
       return { success: false };

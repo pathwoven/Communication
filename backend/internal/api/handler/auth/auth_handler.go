@@ -101,7 +101,7 @@ func RegisterHandler(c *gin.Context) {
 		Password  string `json:"password" binding:"required"`
 		Email     string `json:"email" binding:"required"`
 		Avatar    string `json:"avatar"`
-		Sex       uint8  `json:"sex" binding:"required"`
+		Sex       uint8  `json:"sex"`
 		Birthday  string `json:"birthday"` // 格式："2006-01-02"
 		Signature string `json:"signature"`
 	}

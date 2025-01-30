@@ -26,6 +26,21 @@ func SetupRouter(r *gin.Engine) {
 				listGroup := chatGroup.Group("/list")
 				{
 					listGroup.GET("", chat.GetChatListHandler)
+					listGroup.POST("/create", chat.CreateChatHandler)
+					listGroup.POST("/delete", chat.DeleteChatHandler)
+					listGroup.POST("/pin", chat.PinChatHandler)
+					listGroup.POST("/mute", chat.MuteChatHandler)
+					listGroup.POST("/block", chat.BlockChatHandler)
+					listGroup.POST("/read", chat.ReadChatHandler)
+					listGroup.POST("/add-tag", chat.AddTagToChatHandler)
+					listGroup.POST("/remove-tag", chat.RemoveTagFromChatHandler)
+				}
+				tagGroup := chatGroup.Group("/tag")
+				{
+					tagGroup.GET("/list", chat.GetTagListHandler)
+					tagGroup.POST("/create", chat.CreateTagHandler)
+					tagGroup.POST("/delete", chat.DeleteTagHandler)
+					tagGroup.POST("/rename", chat.RenameTagHandler)
 				}
 			}
 		}
