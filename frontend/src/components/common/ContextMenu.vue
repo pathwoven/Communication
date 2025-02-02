@@ -1,16 +1,22 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUpdated, ref } from 'vue';
 import { useOverlay } from '@/hooks/useOverlay';
 // 父组件需要设置好object和options
 // 还需要监听select事件
 // object是右键菜单的对象
 // options是右键菜单的选项
 // select事件是选中右键菜单选项时触发的事件
-defineEmits(['select']);
+const emit = defineEmits(['select']);
+const object = ref({});   // 初始化为ref(null)时，会在把chat赋值给它时出问题
+const options = ref([]);
 
 const { isActive, showOverlay, hideOverlay, overlayRef, menuPosition } = useOverlay(null);
-const object = ref(null);
-const options = ref([]);
+// 传给父组件
+defineExpose({
+  object,
+  options,
+  showOverlay,
+});
 
 const handleSelectOption = (option) => {
   emit('select', option, object);
@@ -19,8 +25,11 @@ const handleSelectOption = (option) => {
 
 onMounted(() => {
   //overlayRef = ref(null);
-  console.log(overlayRef);
+  // object.value = { id: 1, name: 'test' };
+  // console.log(object,options)
+  
 });
+
 
 </script>
 
@@ -31,8 +40,14 @@ onMounted(() => {
     class="context-menu" 
     ref="overlayRef"
   >
-    <ul v-for="(option,index) in options" :key="index">
-      <li @click="handleSelectOption('option')">{{option}}</li>
+    <ul>
+      <li 
+        v-for="(option, index) in options" 
+        :key="index" 
+        @click="handleSelectOption(option)"
+      >
+        {{ option }}
+      </li>
     </ul>
   </div>
 </template>

@@ -23,7 +23,7 @@ func GetChatListHandler(c *gin.Context) {
 	// 查询chat表，不显示已删除的聊天
 	var dbChats []model.Chat
 	result := repository.DB.Where("user_id = ? AND is_deleted = false", userID).Find(&dbChats)
-	if result.Error != nil {
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误，无法查询到用户"})
 		return
 	}
@@ -58,13 +58,13 @@ func GetChatListHandler(c *gin.Context) {
 	for _, chat := range dbChats {
 		var targetEntity model.Entity
 		var targetContact model.Contact
-		entityResult := repository.DB.Select("is_group", "avatar", "display_id", "name", "remark", "online_status", "status").Where("id = ?", chat.TargetID).First(&targetEntity)
+		entityResult := repository.DB.Select("is_group", "avatar", "display_id", "name", "online_status", "status").Where("id = ?", chat.TargetID).First(&targetEntity)
 		if entityResult.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误，无法查询到用户"})
 			return
 		}
 		contactResult := repository.DB.Select("remark").Where("user_id = ? AND target_id = ?", userID, chat.TargetID).First(&targetContact)
-		if contactResult.Error != nil {
+		if contactResult.Error != nil && contactResult.Error != gorm.ErrRecordNotFound {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误，无法查询到用户"})
 			return
 		}

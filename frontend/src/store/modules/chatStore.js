@@ -11,7 +11,7 @@ export const useChatStore = defineStore("chat", {
 		async fetchChatList() {
 			const response = await chatApi.getChatList();
 			if (response.success) {
-				this.chatList = response.data;
+				this.chatList = response.data.data;
 			}else{
 				console.error('获取聊天列表失败');
 			}
@@ -36,7 +36,7 @@ export const useChatStore = defineStore("chat", {
 		fetchTags() {
 			const response = chatApi.getTags();
 			if (response.success) {
-				this.moreTags = response.data;
+				this.moreTags = response.data.data;
 			}else{
 				console.error('获取标签列表失败');
 			}

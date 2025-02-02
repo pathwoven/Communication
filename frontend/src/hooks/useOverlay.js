@@ -16,6 +16,7 @@ export function useOverlay() {
     const x = clientX + offsetWidth > innerWidth ? innerWidth - offsetWidth : clientX;
     const y = clientY + offsetHeight > innerHeight ? innerHeight - offsetHeight : clientY;
     menuPosition.value = { x, y };
+    console.log(menuPosition.value);
   };
 
   const hideOverlay = () => {

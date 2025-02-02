@@ -3,6 +3,8 @@ import { ref, computed, onBeforeMount } from 'vue'
 import {useChatStore} from '@/store/modules/chatStore'
 import ContextMenu from '@/components/common/ContextMenu.vue'
 import ChatTag from './ChatTag.vue'
+import * as chatApi from '@/api/chat'
+import eventBus from '@/utils/eventBus'
 
 const searchQuery = ref('')
 const chatStore = useChatStore()
@@ -61,23 +63,23 @@ const selectTag = (tag) => {
 // ])
 
 const filteredChats = computed(() => {
-  if(!chatStore.chatList.value) {
+  if(!chatStore.chatList) {
     return []
   }
 	// 根据标签筛选
 	if(searchQuery.value === '') {
 		if(selectedTag.value === '全部') {
-			return chatStore.chatList.value.filter(chat => !chat.is_blocked)
+			return chatStore.chatList.filter(chat => !chat.is_blocked)
 		} else if(selectedTag.value === '未读') {
-			return chatStore.chatList.value.filter(chat => chat.unread_count > 0 && !chat.is_blocked)
+			return chatStore.chatList.filter(chat => chat.unread_count > 0 && !chat.is_blocked)
 		} else if(selectTag.value === '屏蔽') {
-			return chatStore.chatList.value.filter(chat => chat.is_blocked)
+			return chatStore.chatList.filter(chat => chat.is_blocked)
 		}else if(selectedTag.value === '好友') {
-			return chatStore.chatList.value.filter(chat => !chat.is_group && !chat.is_blocked)
+			return chatStore.chatList.filter(chat => !chat.is_group && !chat.is_blocked)
 		}else if(selectedTag.value === '群聊') {
-			return chatStore.chatList.value.filter(chat => chat.is_group && !chat.is_blocked)
+			return chatStore.chatList.filter(chat => chat.is_group && !chat.is_blocked)
 		}else {
-			return chatStore.chatList.value.filter(chat => chat.tag1===selectedTag.value||chat.tag2===selectedTag.value||chat.tag3===selectedTag.value)
+			return chatStore.chatList.filter(chat => chat.tag1===selectedTag.value||chat.tag2===selectedTag.value||chat.tag3===selectedTag.value)
 		}
 	}
 	// 根据搜索关键字筛选
@@ -95,11 +97,11 @@ const selectChat = (chat) => {
 }
 
 // 右键菜单逻辑
+const contextMenu = ref(null)
 // 显示右键菜单
 const showContextMenu = (event, chat) => {
-  const contextMenu = ref(null)
   // 保存聊天对象
-  contextMenu.object.value = chat
+  contextMenu.value.object = chat   // note:ref是浅层的，.object不需要.value 
   // 设置菜单选项
   const options = [];
   if(chat.is_pinned) {
@@ -125,9 +127,21 @@ const showContextMenu = (event, chat) => {
   options.push('删除聊天')
   options.push('添加标签')
   options.push('移除标签')
-  contextMenu.options.value = options
+  contextMenu.value.options = options
   // 显示菜单
-  showOverlay(event)
+  contextMenu.value.showOverlay(event)
+}
+// 处理菜单选项
+const handleSelectOption = async (option, object) => {
+  const chat = object;   
+  if(option==='置顶'){
+    const response = await chatApi.pinChat(chat.id, true)
+    if(response.success) {
+      chat.is_pinned = true
+    }else{
+      eventBus.emit('notify', {message: '置顶失败，请重试', type:'error'})
+    }
+  }
 }
 
 onBeforeMount(() => {
