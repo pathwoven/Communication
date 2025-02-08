@@ -42,6 +42,12 @@ func SetupRouter(r *gin.Engine) {
 					tagGroup.POST("/delete", chat.DeleteTagHandler)
 					tagGroup.POST("/rename", chat.RenameTagHandler)
 				}
+				messageGroup := chatGroup.Group("/message")
+				{
+					messageGroup.POST("/list", chat.GetMessagesHandler)
+					messageGroup.POST("/single/send", chat.SendSingleMessageHandler)
+					messageGroup.POST("/group/send", chat.SendGroupMessageHandler)
+				}
 			}
 		}
 

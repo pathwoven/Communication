@@ -19,21 +19,28 @@ const selectTag = (tag) => {
 };
 
 const showMoreTags = () => {
-  // todo
+  selectTag('更多');
 };
 </script>
 
 <template>
   <div class="tags">
-    <button
+    <n-tag
       v-for="tag in tags"
       :key="tag"
-      :class="{ selected: tag === selectedTag }"
+      :checked="tag === selectedTag"
       @click="selectTag(tag)"
+      checkable
     >
       {{ tag }}
-    </button>
-    <button @click="showMoreTags">更多</button>
+    </n-tag>
+    <n-tag 
+      @click="showMoreTags"
+      :checked="selectedTag === '更多'"
+      checkable
+    > 
+      更多
+    </n-tag>
   </div>
 </template>
 

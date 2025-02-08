@@ -35,24 +35,25 @@ func GetChatListHandler(c *gin.Context) {
 	// 查询entity表和contact表
 	// 合并 chat 和 entity 数据
 	type ChatWithEntity struct {
-		ID           uint
-		TargetID     uint
-		IsGroup      bool
-		Avatar       string
-		DisplayID    string
-		Name         string
-		Remark       string
-		UnreadCount  uint8
-		LastMessage  string
-		LastTime     string
-		OnlineStatus uint8
-		Status       string
-		IsPinned     bool
-		IsMuted      bool
-		IsBlocked    bool
-		Tag1         string
-		Tag2         string
-		Tag3         string
+		ID           uint32 `json:"id"`
+		TargetID     uint32 `json:"target_id"`
+		IsGroup      bool   `json:"is_group"`
+		Avatar       string `json:"avatar"`
+		DisplayID    string `json:"display_id"`
+		Name         string `json:"name"`
+		Remark       string `json:"remark"`
+		UnreadCount  uint8  `json:"unread_count"`
+		LastMessage  string `json:"last_message"`
+		LastTime     string `json:"last_time"`
+		LastPerson   string `json:"last_person"`
+		OnlineStatus uint8  `json:"online_status"`
+		Status       string `json:"status"`
+		IsPinned     bool   `json:"is_pinned"`
+		IsMuted      bool   `json:"is_muted"`
+		IsBlocked    bool   `json:"is_blocked"`
+		Tag1         string `json:"tag1"`
+		Tag2         string `json:"tag2"`
+		Tag3         string `json:"tag3"`
 	}
 	var chatsWithEntity []ChatWithEntity
 	for _, chat := range dbChats {
@@ -68,6 +69,12 @@ func GetChatListHandler(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误，无法查询到用户"})
 			return
 		}
+		var lastTime string
+		if chat.LastTime == nil {
+			lastTime = ""
+		} else {
+			lastTime = chat.LastTime.Format("2006-01-02 15:04:05")
+		}
 		chatsWithEntity = append(chatsWithEntity, ChatWithEntity{
 			ID:           chat.ID,
 			TargetID:     chat.TargetID,
@@ -78,7 +85,8 @@ func GetChatListHandler(c *gin.Context) {
 			Remark:       targetContact.Remark,
 			UnreadCount:  chat.UnreadCount,
 			LastMessage:  chat.LastMessage,
-			LastTime:     chat.LastTime.Format("2006-01-02 15:04:05"),
+			LastTime:     lastTime,
+			LastPerson:   chat.LastPerson,
 			OnlineStatus: targetEntity.OnlineStatus,
 			Status:       targetEntity.Status,
 			IsPinned:     chat.IsPinned,
@@ -103,14 +111,14 @@ func CreateChatHandler(c *gin.Context) {
 	}
 	// 获取目标用户id
 	var input struct {
-		TargetID uint `json:"target_id"`
+		TargetID uint32 `json:"target_id"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
 		return
 	}
 	// 创建聊天
-	err, chat := createChat(uint(userID), input.TargetID)
+	err, chat := createChat(userID, input.TargetID)
 	if err != nil {
 		log.Println("无法创建聊天", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误，无法创建聊天"})
@@ -191,7 +199,7 @@ func DeleteChatHandler(c *gin.Context) {
 		return
 	}
 	// 检查是否是用户的聊天
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权删除该聊天"})
 		return
 	}
@@ -233,7 +241,7 @@ func PinChatHandler(c *gin.Context) {
 		return
 	}
 	// 检查是否是用户的聊天
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}
@@ -274,7 +282,7 @@ func MuteChatHandler(c *gin.Context) {
 		return
 	}
 	// 检查是否是用户的聊天
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}
@@ -315,7 +323,7 @@ func BlockChatHandler(c *gin.Context) {
 		return
 	}
 	// 检查是否是用户的聊天
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}
@@ -356,7 +364,7 @@ func ReadChatHandler(c *gin.Context) {
 		return
 	}
 	// 检查是否是用户的聊天
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}
@@ -401,7 +409,7 @@ func AddTagToChatHandler(c *gin.Context) {
 		return
 	}
 	// 判断用户是否有权限
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}
@@ -457,7 +465,7 @@ func RemoveTagFromChatHandler(c *gin.Context) {
 		return
 	}
 	// 判断用户是否有权限
-	if dbChat.UserID != uint(userID) {
+	if dbChat.UserID != userID {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "无权修改该聊天"})
 		return
 	}

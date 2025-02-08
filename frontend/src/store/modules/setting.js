@@ -23,6 +23,12 @@ export const useSettingStore = defineStore('setting', {
         allow_stranger_message: null,
         is_invisible: null,
 
+    },
+    user:{
+      id: null,
+      display_id: null,
+      nickname: null,
+      avatar: null,
     }
   }),
   actions: {

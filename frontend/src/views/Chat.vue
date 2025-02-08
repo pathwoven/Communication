@@ -2,23 +2,36 @@
 import { ref } from 'vue'
 import ChatList from '@/components/Chat/ChatList.vue'
 import ChatBox from '@/components/Chat/ChatBox.vue'
-import { useResizable } from '@/hooks/useResizable'
+import { NSplit, NLayout, NLayoutContent} from 'naive-ui';
+import MainSider from '@/components/common/MainSider.vue';
+import { useChatStore } from '@/store/modules/chatStore';
 
-const {
-  chatListWidth,
-  chatBoxWidth,
-  startDragging,
-  stopDragging,
-  handleDragging,
-} = useResizable();
-
+const chatStore = useChatStore()
 </script>
 
 <template>
-  <div class="chat-container" @mousemove="handleDragging" @mouseup="stopDragging">
-    <ChatList :style="{ width: chatListWidth }" />
-    <div class="resizer" @mousedown="startDragging"></div>
-    <ChatBox :style="{ width: chatBoxWidth }" />
+  <div class="chat-container">
+    
+    <n-layout has-sider>
+      <MainSider />
+      <n-layout-content>
+        <n-split 
+          direction="horizontal" 
+          style="height: 100vh;" 
+          :default-size="0.3"
+          :max="0.6" 
+          :min="0.2"
+        >
+          <template #1>
+            <ChatList />
+          </template>
+          <template #2>
+            <ChatBox v-if="chatStore.selectedChat"/>
+          </template>
+        </n-split>
+      </n-layout-content>
+      
+    </n-layout>
   </div>
 </template>
 

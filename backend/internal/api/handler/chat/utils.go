@@ -8,7 +8,7 @@ import (
 )
 
 // 创建chat，有可能之前chat已经存在，但是被删除了
-func createChat(userID uint, targetID uint) (error, *model.Chat) {
+func createChat(userID uint32, targetID uint32) (error, *model.Chat) {
 	var dbChat model.Chat
 	// 查询是否已经存在
 	result := repository.DB.Where("user_id = ? AND target_id = ?", userID, targetID).First(&dbChat)

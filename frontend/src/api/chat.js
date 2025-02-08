@@ -197,3 +197,51 @@ export const renameTag = async (old_tag_name, new_tag_name) => {
     return { success: false };
   }
 }
+
+
+// 消息----------------------------------------------------------------
+// 获取与某人的消息列表
+export const getMessages = async (target_id, start, count) => {
+  try {
+    const response = await apiClient.post(`/api/v1/chat/message/list`, { target_id, start, count });
+    if (response.status !== 200) {
+      console.log('获取消息列表失败:', response.data.message);
+      return { success: false, data: null };
+    } else {
+      return { success: true, data: response.data.data };
+    }
+  } catch (error) {
+    console.error('获取消息列表失败:', error);
+    return { success: false, data: null };
+  }
+}
+// 发送单人消息
+export const sendSingleMessage = async (receiver_id, content, content_type, operation, op_message_id ) => {
+  try {
+    const response = await apiClient.post(`/api/v1/chat/message/single/send`, { receiver_id, content, content_type, operation, op_message_id });
+    if (response.status !== 200) {
+      console.log('发送消息失败:', response.data.message);
+      return { success: false, data: null };
+    } else {
+      return { success: true, data: response.data.data };
+    }
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    return { success: false, data: null };
+  }
+}
+// 发送群消息
+export const sendGroupMessage = async (group_id, content, content_type, operation, op_message_id ) => {
+  try {
+    const response = await apiClient.post(`/api/v1/chat/message/group/send`, { group_id, content, content_type, operation, op_message_id });
+    if (response.status !== 200) {
+      console.log('发送消息失败:', response.data.message);
+      return { success: false, data: null };
+    } else {
+      return { success: true, data: response.data.data };
+    }
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    return { success: false, data: null };
+  }
+}

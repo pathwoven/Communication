@@ -33,10 +33,10 @@ export const useChatStore = defineStore("chat", {
 		},
 
 
-		fetchTags() {
-			const response = chatApi.getTags();
+		async fetchTags() {
+			const response = await chatApi.getTags();
 			if (response.success) {
-				this.moreTags = response.data.data;
+				this.moreTags = response.data.data.tags;
 			}else{
 				console.error('获取标签列表失败');
 			}

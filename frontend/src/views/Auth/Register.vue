@@ -1,27 +1,28 @@
-<script setup lang="ts">
-import { ref } from 'vue';
+<script setup>
+import { ref,computed } from 'vue';
 import { useRouter } from 'vue-router';
 import * as authApi from '@/api/auth';
+import { NForm,NFormItem, NAutoComplete, NDatePicker, NRadio, NRadioGroup} from 'naive-ui';
 
-const account = ref('');
-const nickname = ref('');
-const password = ref('');
-const confirmPassword = ref('');
-const email = ref('');
-const emailVerification = ref('');
-const sex = ref('2');
-const birthday = ref('');
-const signature = ref('');
 const router = useRouter();
 
+const model= ref({
+  account: '',
+  nickname: '',
+  password: '',
+  confirmPassword: '',
+  email: '',
+  emailVerification: '',
+  sex: '2',
+  birthday: null,
+  signature: '',
+});
 const register = async () => {
-  if (password.value !== confirmPassword.value) {
+  if (model.value.password !== model.value.confirmPassword) {
     alert('密码和确认密码不匹配');
     return;
   }
-
-  const response = await authApi.register(nickname.value,password.value, email.value,account.value, parseInt(sex.value,10), birthday.value, signature.value);
-
+  const response = await authApi.register(model.value.nickname, model.value.password, model.value.email,model.value.account, parseInt(model.value.sex,10), model.value.birthday, model.value.signature);
   if (response.success) {
     console.log('注册成功');
     router.push('/auth/login');
@@ -29,98 +30,153 @@ const register = async () => {
     console.log('注册失败');
   }
 };
+
+// 表单
+// 规则
+const rules = {
+  account: [
+    {
+      validator(rule, value){
+        if(value){
+          if(!/^[a-zA-Z0-9_]*$/.test(value)){
+            return new Error('账号需由字母、数字、下划线组成');
+          }else if(value.length < 4 || value.length > 16){
+            return new Error('账号长度在 4 到 16 个字符');
+          }
+        }
+        return true;
+      }, 
+      trigger: 'blur' 
+    },
+  ],
+  nickname: [
+    {
+      validator(rule, value){
+        if(value){
+          if(value.length < 2 || value.length > 20){
+            return new Error('昵称长度在 2 到 20 个字符');
+          }
+        }else{
+          return new Error('请输入昵称');
+        }
+      }, 
+      trigger: 'blur'
+    }
+  ],
+  password: [
+    {
+      validator(rule, value){
+        if(value){
+          if(value.length < 6 || value.length > 20){
+            return new Error('密码长度在 6 到 20 个字符');
+          }
+        }else{
+          return new Error('请输入密码');
+        }
+      }, 
+      trigger: 'blur'
+    }
+  ],
+  confirmPassword: [
+    {
+      validator(rule, value){
+        if(value !== model.value.password){
+          return new Error('两次输入密码不一致');
+        }
+        else{
+          return new Error('请输入确认密码');
+        }
+      }, 
+      trigger: 'blur'
+    }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱', trigger: 'blur' },
+  ],
+  
+}
+// 邮箱自动补全
+const emailOptions = computed(()=>{
+  return ["@gmail.com", "@163.com", "@qq.com"].map((suffix)=>{
+    const prefix = model.value.email.split('@')[0];
+    return{
+      label: prefix + suffix,
+      value: prefix + suffix,
+    }
+  });
+})
 </script>
 
 <template>
   <div class="register-container">
-    <form @submit.prevent="register">
-      <div>
-        <label for="account">账号（可为空，不可再次修改）</label>
-        <input id="account" v-model="account" type="text" placeholder="账号" />
-      </div>
-      <div>
-        <label for="nickname">昵称</label>
-        <input id="nickname" v-model="nickname" type="text" placeholder="昵称" required />
-      </div>
-      <div>
-        <label for="password">密码</label>
-        <input id="password" v-model="password" type="password" placeholder="密码" required />
-      </div>
-      <div>
-        <label for="confirmPassword">确认密码</label>
-        <input id="confirmPassword" v-model="confirmPassword" type="password" placeholder="确认密码" required />
-      </div>
-      <div>
-        <label for="email">邮箱</label>
-        <input id="email" v-model="email" type="email" placeholder="邮箱" required />
-      </div>
-      <div>
-        <label for="emailVerification">邮箱验证</label>
-        <input id="emailVerification" v-model="emailVerification" type="text" placeholder="邮箱验证" required />
-      </div>
-      <div>
-        <label for="sex">性别</label>
-        <select id="sex" v-model="sex">
-          <!-- <option value="">请选择</option> -->
-          <option value="2">未知</option>
-          <option value="0">男</option>
-          <option value="1">女</option>
-         
-        </select>
-      </div>
-      <div>
-        <label for="birthday">生日</label>
-        <input id="birthday" v-model="birthday" type="date" />
-      </div>
-      <div>
-        <label for="signature">个性签名</label>
-        <textarea id="signature" v-model="signature" placeholder="个性签名"></textarea>
-      </div>
-      <button type="submit">注册</button>
-    </form>
+    <n-form
+      :model="model"
+      :rules="rules"
+      label-placement="left"
+      label-width="100px"
+      require-mark-placement="right-hanging"
+      class="form"
+    >
+      <n-form-item path="account" label="账号" class="item">
+        <n-input v-model:value="model.account" placeholder="账号" />
+      </n-form-item>
+      <n-form-item show-require-mark path="nickname" label="昵称" class="item">
+        <n-input v-model:value="model.nickname" placeholder="昵称" />
+      </n-form-item>
+      <n-form-item show-require-mark path="password" label="密码" class="item">
+        <n-input v-model:value="model.password" type="password" placeholder="密码" show-password-on="click"/>
+      </n-form-item>
+      <n-form-item show-require-mark path="confirmPassword" label="确认密码" class="item">
+        <n-input v-model:value="model.confirmPassword" type="password" placeholder="确认密码" show-password-on="click"/>
+      </n-form-item>
+      <n-form-item show-require-mark first path="email" label="邮箱" class="item">
+        <n-auto-complete
+          v-model:value="model.email"
+          :input-props="{
+            autocomplete: 'disabled',
+          }"
+          :options="emailOptions"
+          placeholder="邮箱"
+          clearable
+        />
+      </n-form-item>
+      <n-form-item show-require-mark path="emailVerification" label="邮箱验证" class="item">
+        <n-input v-model:value="model.emailVerification" placeholder="邮箱验证" />
+      </n-form-item>
+      <n-form-item show-require-mark path="sex" label="性别" class="item">
+        <n-radio-group v-model:value="model.sex">
+          <n-radio value="2">未知</n-radio>
+          <n-radio value="0">男</n-radio>
+          <n-radio value="1">女</n-radio>
+        </n-radio-group>
+      </n-form-item>
+      <n-form-item path="birthday" label="生日" class="item">
+        <n-date-picker v-model:value="model.birthday" type="date" />
+      </n-form-item>
+      <n-form-item path="signature" label="个性签名" class="item">
+        <n-input v-model:value="model.signature" placeholder="个性签名" />
+      </n-form-item>
+      <n-button attr-type="submit" @click="register" class="item">注册</n-button>
+    </n-form>
   </div>
 </template>
 
 <style scoped>
-register-container {
+.register-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  background-color: #f5f5f5;
+  height: 500px;
 }
-form {
+.form {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
-form > div {
-  margin-bottom: 1em;
-}
-
-label {
-  font-size: 14px;
-}
-
-input, select, textarea {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 3px;
-  padding-left: 5px;
-}
-
-button {
-  padding: 0.5em 1em;
-  font-size: 1em;
-  color: white;
-  background-color: #42b983;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #369f6b;
+.item{
+  
 }
 </style>

@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import Notification from '@/components/common/Notification.vue';
 import eventBus from '@/utils/eventBus';
+import { NMessageProvider, NConfigProvider } from 'naive-ui';
 
 
 // 通知
@@ -28,15 +29,18 @@ onUnmounted(() => {
 
 <template>
 	<div id="app">
-		<Notification ref="notification" />
-		<router-view></router-view>
+		<n-config-provider>
+			<n-message-provider>
+				<router-view></router-view>
+			</n-message-provider>
+		</n-config-provider>
 	</div>
 </template>
 
 <style src="@/assets/styles/main.css">
 #app {
-	height: 100%;
-	width: 100%;
+	height: 100vh;
+	width: 100vw;
 	background-color: #f0f2f5;
 }
 </style>

@@ -1,21 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import {useMessage, NForm, NFormItem} from 'naive-ui'
 import * as authApi from '@/api/auth';
 
-const displayId = ref('');
-const password = ref('');
+const account = ref({
+  displayId: '',
+  password: '',
+});
 const router = useRouter();
+const message = useMessage();
 
 const login = async () =>{
   // api todo
-  const response = await authApi.login(displayId.value, password.value);
+  const response = await authApi.login(account.value.displayId, account.value.password);
   if(response.success){
-   console.log("登录成功");
-   //router.push('/'); 
+    message.success('登录成功');
+    router.push('/home');
   }else{
-   console.log("登录失败");
+    message.error('登录失败');
   }
+
 }
 const goToForget = () =>{
    router.push('/auth/forget');
@@ -27,43 +32,51 @@ const goToRegister = () =>{
 
 <template>
   <div class="login-container">
-   <input v-model="displayId" type="text" placeholder="账号" class="input-field" />
-   <input v-model="password" type="password" placeholder="密码" class="input-field" />
-   <button @click="login" class="button">Login</button>
-   <button @click="goToForget" class="button">Forget</button>
-   <button @click="goToRegister" class="button">Register</button>
+    <n-form
+      class="input-field"
+      :model="account"
+      :rules="{
+        displayId: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+      }"
+    >
+      <n-form-item path="displayId" >
+        <n-input v-model:value="account.displayId" placeholder="账号" class="item"/>
+      </n-form-item>
+      <n-form-item path="password">
+        <n-input v-model:value="account.password" placeholder="密码" class="item"/>
+      </n-form-item>
+      <n-form-item style="display: flex;flex-direction: column;align-items: center;">
+        <n-button attr-type="submit" @click="login" class="item">Login</n-button>
+      </n-form-item>
+    </n-form> 
+    <div class="action">
+      <n-button @click="goToForget" class="button" text>Forget</n-button>
+      <n-button @click="goToRegister" class="button" text>Register</n-button>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .login-container {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+.input-field {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  height: 100%;
-  background-color: #f5f5f5;
 }
 
-.input-field {
-  margin: 10px 0;
-  padding: 10px;
-  width: 200px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.button {
+.item {
   margin: 10px 0;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
 }
-
-.button:hover {
-  background-color: #0056b3;
+.action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 </style>

@@ -5,6 +5,8 @@ import ContextMenu from '@/components/common/ContextMenu.vue'
 import ChatTag from './ChatTag.vue'
 import * as chatApi from '@/api/chat'
 import eventBus from '@/utils/eventBus'
+import { NIcon, NDropdown, NTag, NAvatar, NBadge} from 'naive-ui'
+import {Search, AddCircle} from '@vicons/ionicons5';
 
 const searchQuery = ref('')
 const chatStore = useChatStore()
@@ -15,7 +17,20 @@ const selectedTag = ref('全部')
 // 选择标签
 const selectTag = (tag) => {
 	selectedTag.value = tag
+  if(tag !== '好友' && tag !== '群聊' && tag !== '未读' && tag !== '全部' && tag !== '屏蔽') {
+    // 显示更多标签
+    selectedTag.value = '更多'
+  }
 }
+// 更多标签
+const moreTags = computed(() => {
+  if(!chatStore.moreTags) {
+    return []
+  }
+  return chatStore.moreTags.map(tag => {
+    return {label: tag, key: tag}
+  })
+})
 
 // const chats = ref([
 //   // 示例聊天
@@ -72,7 +87,7 @@ const filteredChats = computed(() => {
 			return chatStore.chatList.filter(chat => !chat.is_blocked)
 		} else if(selectedTag.value === '未读') {
 			return chatStore.chatList.filter(chat => chat.unread_count > 0 && !chat.is_blocked)
-		} else if(selectTag.value === '屏蔽') {
+		} else if(selectedTag.value === '屏蔽') {
 			return chatStore.chatList.filter(chat => chat.is_blocked)
 		}else if(selectedTag.value === '好友') {
 			return chatStore.chatList.filter(chat => !chat.is_group && !chat.is_blocked)
@@ -94,64 +109,133 @@ const createContact = () => {
 
 const selectChat = (chat) => {
   // 选择聊天逻辑
+  chatStore.selectChat(chat)
 }
 
 // 右键菜单逻辑
-const contextMenu = ref(null)
+const contextMenu = ref({
+  x: 0,
+  y: 0,
+  show: false,
+  chat: null,
+  options: []
+})
 // 显示右键菜单
 const showContextMenu = (event, chat) => {
   // 保存聊天对象
-  contextMenu.value.object = chat   // note:ref是浅层的，.object不需要.value 
+  contextMenu.value.chat = chat   // note:ref是浅层的，.chat不需要.value 
   // 设置菜单选项
   const options = [];
   if(chat.is_pinned) {
-    options.push('取消置顶')
+    options.push({label:'取消置顶', key:'取消置顶'})
   } else {
-    options.push('置顶')
+    options.push({label:'置顶', key:'置顶'})
   }
   if(chat.is_mute) {
-    options.push('取消免打扰')
+    options.push({label: '取消免打扰', key: '取消免打扰'})
   } else {
-    options.push('免打扰')
+    options.push({label: '免打扰', key: '免打扰'})
   }
   if(chat.is_blocked) {
-    options.push('取消屏蔽')
+    options.push({label: '取消屏蔽', key: '取消屏蔽'})
   } else {
-    options.push('屏蔽')
+    options.push({label: '屏蔽', key: '屏蔽'})
   }
   if(chat.unread_count > 0) {
-    options.push('标记为已读')
-  }else{
-    options.push('标记为未读')
+    options.push({label: '标记为已读', key: '标记为已读'})
+  } else {
+    options.push({label: '标记为未读', key: '标记为未读'})
   }
-  options.push('删除聊天')
-  options.push('添加标签')
-  options.push('移除标签')
+  options.push({label: '删除聊天', key: '删除聊天'})
+  options.push({label: '添加标签', key: '添加标签'})
+  options.push({label: '移除标签', key: '移除标签'})
   contextMenu.value.options = options
+  // 设置菜单位置
+  contextMenu.value.x = event.clientX
+  contextMenu.value.y = event.clientY
   // 显示菜单
-  contextMenu.value.showOverlay(event)
+  contextMenu.value.show = true
 }
 // 处理菜单选项
-const handleSelectOption = async (option, object) => {
-  const chat = object;   
+const handleSelectOption = async (option) => { 
   if(option==='置顶'){
-    const response = await chatApi.pinChat(chat.id, true)
+    const response = await chatApi.pinChat(contextMenu.value.chat.id, true)
     if(response.success) {
-      chat.is_pinned = true
+      contextMenu.value.chat.is_pinned = true
     }else{
       eventBus.emit('notify', {message: '置顶失败，请重试', type:'error'})
     }
   }
+  else if(option==='取消置顶'){
+    const response = await chatApi.pinChat(contextMenu.value.chat.id, false)
+    if(response.success) {
+      contextMenu.value.chat.is_pinned = false
+    }else{
+      eventBus.emit('notify', {message: '取消置顶失败，请重试', type:'error'})
+    }
+  }
+  else if(option === '免打扰') {
+    const response = await chatApi.muteChat(contextMenu.value.chat.id, true)
+    if(response.success) {
+      contextMenu.value.chat.is_mute = true
+    } else {
+      eventBus.emit('notify', {message: '设置免打扰失败，请重试', type:'error'})
+    }
+  } 
+  else if(option === '取消免打扰') {
+    const response = await chatApi.muteChat(contextMenu.value.chat.id, false)
+    if(response.success) {
+      contextMenu.value.chat.is_mute = false
+    } else {
+      eventBus.emit('notify', {message: '取消免打扰失败，请重试', type:'error'})
+    }
+  } 
+  else if(option === '屏蔽') {
+    const response = await chatApi.blockChat(contextMenu.value.chat.id, true)
+    if(response.success) {
+      contextMenu.value.chat.is_blocked = true
+    } else {
+      eventBus.emit('notify', {message: '屏蔽失败，请重试', type:'error'})
+    }
+  } 
+  else if(option === '取消屏蔽') {
+    const response = await chatApi.blockChat(contextMenu.value.chat.id, false)
+    if(response.success) {
+      contextMenu.value.chat.is_blocked = false
+    } else {
+      eventBus.emit('notify', {message: '取消屏蔽失败，请重试', type:'error'})
+    }
+  } 
+  else if(option === '标记为已读') {
+    const response = await chatApi.readChat(contextMenu.value.chat.id, true)
+    if(response.success) {
+      contextMenu.value.chat.unread_count = 0
+    } else {
+      eventBus.emit('notify', {message: '标记为已读失败，请重试', type:'error'})
+    }
+  } else if(option === '标记为未读') {
+    const response = await chatApi.readChat(contextMenu.value.chat.id, false)
+    if(response.success) {
+      contextMenu.value.chat.unread_count = 1
+    } else {
+      eventBus.emit('notify', {message: '标记为未读失败，请重试', type:'error'})
+    }
+  }
+  contextMenu.value.show = false
+}
+// 处理菜单点击到外面
+const onMenuClickedOutside = () => {
+  contextMenu.value.show = false
 }
 
 onBeforeMount(() => {
 	// 检查chatStore中是否有聊天数据
-	if(useChatStore().chatList.length === 0) {
+	if(!useChatStore().chatList || useChatStore().chatList.length === 0) {
 		// 从服务器获取聊天数据
 		useChatStore().fetchChatList()
 	}
 	// 检查chatStore中是否有标签数据
-	if(useChatStore().moreTags.length === 0) {
+	if(!useChatStore().moreTags || useChatStore().moreTags.length === 0) {
 		// 从服务器获取标签数据
 		useChatStore().fetchTags()
 	}
@@ -162,15 +246,45 @@ onBeforeMount(() => {
   <div class="chat-list-container">
 		<!--聊天框-->
     <div class="search-bar">
-      <input type="text" v-model="searchQuery" placeholder="搜索聊天" />
-      <button @click="createContact">+</button>
+      <n-input 
+        type="text" 
+        v-model:value="searchQuery" 
+        placeholder="搜索聊天" 
+      >
+        <template #prefix>
+          <n-icon  :component="Search"/>
+        </template>
+      </n-input>
+      <n-button text @click="createContact">
+        <template #icon>
+          <n-icon :component="AddCircle"/>
+        </template>
+      </n-button>
     </div>
 		<!--标签-->
-		<ChatTag 
-			:tags="tags" 
-			:selectedTag="selectedTag" 
-			@update:selectedTag="selectTag" 
-		/>
+    <div class="tags">
+      <n-tag
+        v-for="tag in tags"
+        :key="tag"
+        :checked="tag === selectedTag"
+        @click="selectTag(tag)"
+        checkable
+        size="small"
+      >
+        {{ tag }}
+      </n-tag>
+      <n-dropdown trigger="click" :options="moreTags" @select="selectTag">
+        <n-tag 
+          @click="selectTag('更多')"
+          :checked="selectedTag === '更多'"
+          checkable
+          size="small"
+        > 
+          更多
+        </n-tag>
+      </n-dropdown>
+    </div>
+		
 		<!--聊天列表-->
     <ul class="chat-list" v-for="chat in filteredChats">
       <li 
@@ -178,24 +292,37 @@ onBeforeMount(() => {
         @click="selectChat(chat)"
         @contextmenu.prevent="showContextMenu($event, chat)"
       >
-        <img :src="chat.avatar" alt="头像" class="avatar" />
+        <!--头像-->
+        <n-badge dot :color="chat.online_status? 'green':'grey'">
+          <n-avatar 
+            round
+            :src="chat.avatar"
+            alt="头像"
+            size="medium"
+          />
+        </n-badge>
         <div class="chat-info">
           <div class="chat-header">
             <span class="chat-name">{{ chat.remark? chat.remark : chat.name }}</span>
             <span class="chat-time">{{ chat.last_time }}</span>
           </div>
           <div class="chat-content">
-            <span class="chat-message">{{ chat.last_message }}</span>
+            <span class="chat-message">{{ (chat.last_person?chat.last_person+":":"" )+ chat.last_message }}</span>
             <span class="chat-unread" v-if="chat.unread_count">{{ chat.unread_count }}</span>
           </div>
         </div>
-        <div class="chat-status" :class="{ online: chat.online_status }"></div>
       </li>
     </ul>
     <!--菜单-->
-    <ContextMenu 
-      ref="contextMenu"
-      @select="handleSelectOption" 
+    <n-dropdown 
+      placement="bottom-start"
+      trigger="manual"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :options="contextMenu.options"
+      :show="contextMenu.show"
+      @select="handleSelectOption"
+      :on-clickoutside="onMenuClickedOutside"
     />
   </div>
 </template>
