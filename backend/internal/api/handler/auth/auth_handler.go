@@ -26,7 +26,7 @@ func LoginHandler(c *gin.Context) {
 	// 查询字段，检验账号密码，及是否已登录
 	// 查询entity表
 	var dbEntity model.Entity
-	result := repository.DB.Select("id", "online_status").Where("display_id = ?", user.DisplayID).First(&dbEntity)
+	result := repository.DB.Select("id", "online_status", "name", "avatar", "display_id").Where("display_id = ?", user.DisplayID).First(&dbEntity)
 	if result.Error != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "账号或密码错误"})
 		return
@@ -89,7 +89,13 @@ func LoginHandler(c *gin.Context) {
 	tx.Commit()
 
 	// 登录成功
-	c.JSON(http.StatusOK, gin.H{"data": dbUserSetting})
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{
+		"id":         dbEntity.ID,
+		"name":       dbEntity.Name,
+		"avatar":     dbEntity.Avatar,
+		"display_id": dbEntity.DisplayID,
+		"setting":    dbUserSetting,
+	}})
 }
 
 // 注册

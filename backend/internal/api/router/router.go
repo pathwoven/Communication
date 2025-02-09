@@ -3,6 +3,7 @@ package router
 import (
 	"Communication/internal/api/handler/auth"
 	"Communication/internal/api/handler/chat"
+	"Communication/internal/api/handler/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,8 @@ func SetupRouter(r *gin.Engine) {
 	{
 		v1 := api.Group("/v1")
 		{
+			// websocket
+			v1.GET("/ws", ws.WebSocketHandler)
 			// 用户认证
 			authGroup := v1.Group("/auth")
 			{

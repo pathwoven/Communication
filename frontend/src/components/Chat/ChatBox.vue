@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { NLayout, NLayoutSider, NLayoutContent, NLayoutHeader, NLayoutFooter } from 'naive-ui'
 import {useSettingStore} from '@/store/modules/setting';
 import {useChatStore} from '@/store/modules/chatStore';
+import eventBus from '@/utils/eventBus';
 import * as chatApi from '@/api/chat';
 
 import MessageContent from './MessageContent.vue';
@@ -13,6 +14,7 @@ const chatStore = useChatStore();
 
 
 const messages = ref(null)
+// 获取消息列表
 const fetchMessages = async () => {
   const response = await chatApi.getMessages(chatStore.selectedChat.target_id, 0, 50)
   if (response.success) {
@@ -22,6 +24,15 @@ const fetchMessages = async () => {
     // 提醒 todo
   }
 }
+// 接收新消息
+eventBus.on('new-message', (data) => {
+  if(chatStore.selectedChat &&
+      (data.sender_id === chatStore.selectedChat.target_id||data.receiver_id === chatStore.selectedChat.target_id))
+  {
+    messages.value.push(data)
+    scrollToBottom()
+  }
+})
 // 监听聊天人
 watch(() => chatStore.selectedChat, (newVal) => {
   if(newVal){
@@ -46,6 +57,7 @@ const sendMessage = (data) => {
     operation: operation.value,
     op_message_id: op_message_id.value,
   }
+  console.log(message)
   messages.value.push(message)
   scrollToBottom()
 }
@@ -66,6 +78,9 @@ onMounted(() => {
     return
   }
   fetchMessages()
+})
+onBeforeUnmount(() => {
+  eventBus.off('new-message')
 })
 </script>
 

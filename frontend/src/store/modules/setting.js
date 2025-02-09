@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 export const useSettingStore = defineStore('setting', {
   state: () => ({
     setting:{
+        user_id: null,
         birthday: null,
         sex: null,
         font_size: null,
@@ -36,5 +37,8 @@ export const useSettingStore = defineStore('setting', {
         // todo
         this.setting = { ...this.setting, ...newSettings };
     },
+    setUser(user){
+      this.user = user;
+    }
   },
 });

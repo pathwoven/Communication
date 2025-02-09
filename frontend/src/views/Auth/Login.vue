@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import {useMessage, NForm, NFormItem} from 'naive-ui'
+import { useSettingStore } from '@/store/modules/setting';
+import { createWebSocketConnection } from '@/api/websocket';
 import * as authApi from '@/api/auth';
 
 const account = ref({
@@ -11,12 +13,24 @@ const account = ref({
 const router = useRouter();
 const message = useMessage();
 
+const settingStore = useSettingStore();
+
 const login = async () =>{
   // api todo
   const response = await authApi.login(account.value.displayId, account.value.password);
   if(response.success){
     message.success('登录成功');
-    router.push('/home');
+    // 写入个人信息
+    settingStore.updateSettings(response.data.setting);
+    settingStore.setUser({
+      id: response.data.id,
+      nickname: response.data.name,
+      avatar: response.data.avatar,
+      display_id: response.data.display_id,
+    });
+    // 创建ws连接
+    createWebSocketConnection();
+    router.push('/chat');
   }else{
     message.error('登录失败');
   }

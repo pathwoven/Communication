@@ -17,12 +17,12 @@ const emit = defineEmits(['send-message'])
 const newMessage = ref('')
 
 // 发送文本消息，0为文本类型
-const sendTextMessage = () => {
+const sendTextMessage = async () => {
   let response;
   if(isGroup){
-    response = chatApi.sendGroupMessage(receiver_id,newMessage.value, 0, operation,op_message_id)
+    response = await chatApi.sendGroupMessage(receiver_id,newMessage.value, 0, operation,op_message_id)
   }else{
-    response = chatApi.sendSingleMessage(receiver_id,newMessage.value, 0,operation,op_message_id)
+    response = await chatApi.sendSingleMessage(receiver_id,newMessage.value, 0,operation,op_message_id)
   }
   if(!response.success){
     console.log('发送消息失败')   // 提醒 todo
@@ -31,7 +31,7 @@ const sendTextMessage = () => {
       id: response.data.id,
       create_time: response.data.create_time,
       content: newMessage.value,
-      content_type: 'text',
+      content_type: 0,
     })
   }
   newMessage.value = ''

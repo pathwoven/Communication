@@ -4,6 +4,7 @@ import (
 	"Communication/internal/repository"
 	"Communication/internal/repository/model"
 	"Communication/internal/utils"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -231,7 +232,18 @@ func SendSingleMessageHandler(c *gin.Context) {
 	if isNewChat {
 		// todo
 	} else {
-
+		data, err := json.Marshal(map[string]interface{}{
+			"type":       "message",
+			"data":       message,
+			"needNotice": !(dbChat.IsMuted && dbChat.IsBlocked),
+		})
+		if err != nil {
+			log.Println("无法序列化message", err)
+			return
+		}
+		if err = utils.WsSendMessage(input.ReceiverID, data); err != nil {
+			log.Println("无法发送消息", err)
+		}
 	}
 
 }

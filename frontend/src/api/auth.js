@@ -8,7 +8,7 @@ export const login = async (display_id, password) => {
       return { success: false, data: null };
     }else{
       //sessionStorage.setItem('sessionToken', response.data.sessionToken);
-      return { success: true, data: response.data };  
+      return { success: true, data: response.data.data };  
     }
   } catch (error) {
     console.error('登录失败:', error);
