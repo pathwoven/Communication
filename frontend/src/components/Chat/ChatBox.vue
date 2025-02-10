@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
-import { NLayout, NLayoutSider, NLayoutContent, NLayoutHeader, NLayoutFooter } from 'naive-ui'
+import { ref, onMounted, watch, onBeforeUnmount, onBeforeMount, useTemplateRef, nextTick } from 'vue'
+import { NLayout, NLayoutSider, NLayoutContent, NLayoutHeader, NLayoutFooter, NAffix, NTag } from 'naive-ui'
 import {useSettingStore} from '@/store/modules/setting';
 import {useChatStore} from '@/store/modules/chatStore';
 import eventBus from '@/utils/eventBus';
@@ -19,10 +19,14 @@ const fetchMessages = async () => {
   const response = await chatApi.getMessages(chatStore.selectedChat.target_id, 0, 50)
   if (response.success) {
     messages.value = response.data
+
   } else {
     console.log('获取消息列表失败')
     // 提醒 todo
   }
+  nextTick(() => {
+    scrollToBottom(true)
+  })
 }
 // 接收新消息
 eventBus.on('new-message', (data) => {
@@ -42,37 +46,60 @@ watch(() => chatStore.selectedChat, (newVal) => {
 
 const operation = ref(null)
 const op_message_id = ref(null)
-const receiver_id = ref('')
 
 const sendMessage = (data) => {
   const message = {
     id: data.id,
     avatar: settingStore.user.avatar,
     name: settingStore.user.nickname,
-    time: data.create_time,
+    create_time: data.create_time,
     content: data.content,
     content_type: data.content_type,
     sender_id: settingStore.user.id,
-    receiver_id: receiver_id.value,
+    receiver_id: chatStore.selectedChat.target_id,
     operation: operation.value,
     op_message_id: op_message_id.value,
   }
-  console.log(message)
   messages.value.push(message)
+  // 更新chatList
+  let lastMessage;
+  if(message.content_type === 1){
+    lastMessage = '[图片]'
+  }else if(message.content_type === 2){
+    lastMessage = '[文件]'
+  }else if(message.content_type === 3){
+    lastMessage = '[群投票]'
+  }else if(message.content_type === 4){
+    lastMessage = '[聊天记录]'
+  }else{
+    lastMessage = message.content
+  }
+  chatStore.updataChatMessage(message.receiver_id, lastMessage, '', message.create_time)
+  console.log(message)
   scrollToBottom()
 }
 
+
+
+
+
+// 布局
+const collapsed = ref(true)
+const contentRef = useTemplateRef('contentRef')
+const scrollToBottom = (immediate=false) => {
+  if(contentRef.value && contentRef.value.scrollableElRef){
+    const scrollableEl = contentRef.value.scrollableElRef
+    scrollableEl.scrollTo({
+      top: scrollableEl.scrollHeight,
+      behavior: immediate? 'instant':'smooth',
+    })
+  }
+}
 const loadMoreMessages = () => {
   // 加载更多消息逻辑
 }
 
-const scrollToBottom = () => {
-  const chatMessages = document.querySelector('.chat-messages')
-  chatMessages.scrollTop = chatMessages.scrollHeight
-}
-
 onMounted(() => {
-  scrollToBottom()
   // 获取消息列表
   if(chatStore.selectedChat === null){
     return
@@ -86,18 +113,34 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="chat-box-container">
-    <n-layout  has-sider>
-      <n-layout-content >
-        <div style="display: flex; flex-direction: column;height: 100vh;">
-          <div class="chat-header">
+    <n-layout  has-sider sider-placement="right">
+      <n-layout >
+        <!--头部-->
+        <n-layout-header class="chat-header">
+          <div >
             <img :src="chatStore.selectedChat.avatar" alt="头像" class="avatar" />
             <div class="chat-info">
               <span class="chat-name">{{ chatStore.selectedChat.name }}</span>
-              <span class="chat-status" :class="{ online: chatStore.selectedChat.online }"></span>
+              <span class="chat-status" :class="{ online: chatStore.selectedChat.online_status }"></span>
             </div>
+            <n-button
+              size="small"
+              type="text"
+              @click="collapsed = !collapsed"
+            >
+              ···
+            </n-button>
           </div>
-          <!-- 展示消息列表-->
-          <div class="chat-messages" @scroll="loadMoreMessages" id="chat-messages">
+        </n-layout-header> 
+        <!-- 展示消息列表-->
+        <n-layout-content 
+          position="absolute" 
+          native-scrollbar="false" 
+          class="chat-content" 
+          @scroll="loadMoreMessages"
+          ref="contentRef"
+        >
+          <div class="chat-messages">
             <!--消息列表-->
             <div v-for="message in messages" :key="message.id" class="message-item">
               <!--我发出的消息-->
@@ -112,6 +155,13 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
+          <!--滚动至底部-->
+          <div class="scroll-to-bottom" @click="scrollToBottom">
+            <n-tag type="success">滚动至底部</n-tag>
+          </div>
+        </n-layout-content>
+        <!--底部-->
+        <n-layout-footer class="chat-footer" position="absolute">
           <!--输入区域-->
           <MessageInput
             :isGroup="chatStore.selectedChat.isGroup"
@@ -120,14 +170,18 @@ onBeforeUnmount(() => {
             :receiver_id="chatStore.selectedChat.target_id"
             @send-message="sendMessage"
           />
-        </div>
-        
-      </n-layout-content>
-      
+        </n-layout-footer>
+      </n-layout>
       <!--侧边栏-->
       <n-layout-sider
-        collapsed=false
+        collapse-mode="width"
+        :width="200"
+        collapsed-width="0"
+        :collapsed="collapsed"
       >
+        <div >
+          侧边栏
+        </div>
       </n-layout-sider>
     </n-layout>
     
@@ -147,7 +201,15 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ccc;
-  flex-grow: 1;
+  height: 100px;
+}
+.chat-footer{
+  height: 100px;
+  bottom: 0;
+}
+.chat-content{
+  top:100px;
+  bottom:100px;
 }
 
 .avatar {
@@ -173,9 +235,13 @@ onBeforeUnmount(() => {
 .chat-status.online {
   background-color: green;
 }
+.scroll-to-bottom {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
 .chat-messages {
-  flex-grow: 19;
-  overflow-y: auto;
+ 
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -221,11 +287,9 @@ onBeforeUnmount(() => {
   display: flex;
   padding: 10px;
   border-top: 1px solid #ccc;
-  flex-grow: 2;
 }
 
 .chat-input input {
-  flex-grow: 1;
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;

@@ -107,9 +107,15 @@ const createContact = () => {
   // 添加聊天逻辑
 }
 
-const selectChat = (chat) => {
+const selectChat = async (chat) => {
   // 选择聊天逻辑
   chatStore.selectChat(chat)
+  const response = await chatApi.readChat(chat.id, true)
+  if(response.success) {
+    chat.unread_count = 0
+  } else {
+    console.log('标记为已读失败')
+  }
 }
 
 // 右键菜单逻辑
@@ -227,6 +233,16 @@ const handleSelectOption = async (option) => {
 const onMenuClickedOutside = () => {
   contextMenu.value.show = false
 }
+// 添加菜单的选项
+const handleAddMenu = (option)=> {
+  if(option === '添加好友') {
+    // 添加好友逻辑
+  } else if(option === '添加群聊') {
+    // 添加群聊逻辑
+  } else if(option === '创建群聊') {
+    // 创建群聊逻辑
+  }
+}
 
 onBeforeMount(() => {
 	// 检查chatStore中是否有聊天数据
@@ -243,8 +259,8 @@ onBeforeMount(() => {
 </script>
 
 <template>
+  <!--聊天框-->
   <div class="chat-list-container">
-		<!--聊天框-->
     <div class="search-bar">
       <n-input 
         type="text" 
@@ -255,11 +271,17 @@ onBeforeMount(() => {
           <n-icon  :component="Search"/>
         </template>
       </n-input>
-      <n-button text @click="createContact">
-        <template #icon>
+      <n-dropdown 
+        trigger="click" 
+        :options="[
+          {label: '添加好友', key: '添加好友'},
+          {label: '添加群聊', key: '添加群聊'},
+          {label: '创建群聊', key: '创建群聊'},
+        ]" 
+        @select="handleAddMenu"
+      >
           <n-icon :component="AddCircle"/>
-        </template>
-      </n-button>
+      </n-dropdown>
     </div>
 		<!--标签-->
     <div class="tags">
@@ -291,6 +313,7 @@ onBeforeMount(() => {
         :key="chat.id" 
         @click="selectChat(chat)"
         @contextmenu.prevent="showContextMenu($event, chat)"
+        :class="{selected: chatStore.selectedChat && chatStore.selectedChat.id === chat.id}"
       >
         <!--头像-->
         <n-badge dot :color="chat.online_status? 'green':'grey'">
@@ -373,9 +396,11 @@ onBeforeMount(() => {
   border-bottom: 1px solid #ccc;
   cursor: pointer;
 }
-
 .chat-list li:hover {
   background-color: #f5f5f5;
+}
+.chat-list li.selected{
+  background-color: #d9d7d7;
 }
 
 .avatar {

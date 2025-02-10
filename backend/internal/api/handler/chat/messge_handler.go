@@ -232,11 +232,18 @@ func SendSingleMessageHandler(c *gin.Context) {
 	if isNewChat {
 		// todo
 	} else {
-		data, err := json.Marshal(map[string]interface{}{
-			"type":       "message",
-			"data":       message,
-			"needNotice": !(dbChat.IsMuted && dbChat.IsBlocked),
-		})
+		var newData = map[string]interface{}{
+			"type": "message",
+			"data": map[string]interface{}{
+				"message": message,
+				"chat": map[string]interface{}{
+					"last_message": lastMessage,
+					"last_person":  last_person,
+					"target_id":    userID,
+				},
+			},
+		}
+		data, err := json.Marshal(newData)
 		if err != nil {
 			log.Println("无法序列化message", err)
 			return

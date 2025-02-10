@@ -1,8 +1,10 @@
 import { baseURL } from "./api";
 import {useChatStore} from "@/store/modules/chatStore";
+import { useSettingStore } from "@/store/modules/setting";
 import eventBus from "@/utils/eventBus";  
 
 const chatStore = useChatStore();
+const settingStore = useSettingStore();
 
 export const createWebSocketConnection = () => {
   const ws = new WebSocket(`${baseURL}/api/v1/ws`);
@@ -50,8 +52,9 @@ const handleData = (data) =>{
   }
   // message
   if(data.type === 'message'){
-    if(chatStore.selectedChat && (chatStore.selectedChat.target_id === data.data.receiver_id || chatStore.selectedChat.target_id === data.data.sender_id)){
-      eventBus.emit('new-message', data.data);
+    if(chatStore.selectedChat && (chatStore.selectedChat.target_id === data.data.chat.target_id)){
+      eventBus.emit('new-message', data.data.message);
     }
+    chatStore.updataChatMessage(data.data.chat.target_id, data.data.chat.last_message, data.data.chat.last_person, data.data.message.create_time);
   }
 }

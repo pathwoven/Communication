@@ -31,7 +31,17 @@ export const useChatStore = defineStore("chat", {
 				this.chatList.splice(index, 1, newChat);
 			}
 		},
-
+		async updataChatMessage(target_id, last_message, last_person, last_time) {
+			if(!this.chatList || this.chatList.length === 0){
+				await this.fetchChatList();
+			}
+			const chat = this.chatList.find(chat => chat.target_id === target_id);
+			if(chat){
+				chat.last_message = last_message;
+				chat.last_person = last_person;
+				chat.last_time = last_time;
+			}
+		},
 
 		async fetchTags() {
 			const response = await chatApi.getTags();

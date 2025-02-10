@@ -40,6 +40,12 @@ const sendTextMessage = async () => {
 
 <template>
   <div class="message-input">
+    <!-- 操作 -->
+    <div class = "operation">
+      <n-button text>图片</n-button>
+      <n-button text>文件</n-button>
+      <n-button text>群投票</n-button>
+    </div>
     <n-input v-model:value="newMessage" placeholder="请输入消息" />
     <n-button type="primary" @click="sendTextMessage">发送</n-button>
   </div>
