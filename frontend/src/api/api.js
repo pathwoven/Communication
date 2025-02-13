@@ -4,9 +4,6 @@ export const baseURL = 'http://localhost:8080';
 const apiClient = axios.create({
   baseURL: baseURL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 // 请求拦截器
 // apiClient.interceptors.request.use(

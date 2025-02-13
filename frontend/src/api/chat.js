@@ -216,9 +216,12 @@ export const getMessages = async (target_id, start, count) => {
   }
 }
 // 发送单人消息
-export const sendSingleMessage = async (receiver_id, content, content_type, operation, op_message_id ) => {
+export const sendSingleMessage = async (formData) => {
   try {
-    const response = await apiClient.post(`/api/v1/chat/message/single/send`, { receiver_id, content, content_type, operation, op_message_id });
+    for(var pair of formData.entries()) {
+      console.log(pair[0]+ ', '+ pair[1]);
+    }
+    const response = await apiClient.post(`/api/v1/chat/message/single/send`, { formData}, {headers: {'Content-Type': 'multipart/form-data'}});
     if (response.status !== 200) {
       console.log('发送消息失败:', response.data.message);
       return { success: false, data: null };
@@ -231,9 +234,9 @@ export const sendSingleMessage = async (receiver_id, content, content_type, oper
   }
 }
 // 发送群消息
-export const sendGroupMessage = async (group_id, content, content_type, operation, op_message_id ) => {
+export const sendGroupMessage = async (formData ) => {
   try {
-    const response = await apiClient.post(`/api/v1/chat/message/group/send`, { group_id, content, content_type, operation, op_message_id });
+    const response = await apiClient.post(`/api/v1/chat/message/group/send`, {formData}, {headers: {'Content-Type': 'multipart/form-data'}});
     if (response.status !== 200) {
       console.log('发送消息失败:', response.data.message);
       return { success: false, data: null };

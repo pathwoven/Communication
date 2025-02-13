@@ -3,6 +3,7 @@ package chat
 import (
 	"Communication/internal/repository"
 	"Communication/internal/repository/model"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -37,4 +38,22 @@ func createChat(userID uint32, targetID uint32) (error, *model.Chat) {
 	}
 
 	return nil, &dbChat
+}
+
+// 转化last_message
+func convertLastMessage(contentType uint8) (string, error) {
+	switch contentType {
+	case 0:
+		return "", nil
+	case 1:
+		return "[图片]", nil
+	case 2:
+		return "[文件]", nil
+	case 3:
+		return "[群投票]", nil
+	case 4:
+		return "[聊天记录]", nil
+	default:
+		return "", fmt.Errorf("未知的content_type")
+	}
 }

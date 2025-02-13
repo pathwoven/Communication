@@ -5,8 +5,12 @@ import ContextMenu from '@/components/common/ContextMenu.vue'
 import ChatTag from './ChatTag.vue'
 import * as chatApi from '@/api/chat'
 import eventBus from '@/utils/eventBus'
-import { NIcon, NDropdown, NTag, NAvatar, NBadge} from 'naive-ui'
+import { NIcon, NDropdown, NTag, NAvatar, NBadge, NModalProvider, NModal} from 'naive-ui'
 import {Search, AddCircle} from '@vicons/ionicons5';
+
+import AddFriend from './AddFriend.vue'
+import AddGroup from './AddGroup.vue'
+import CreateGroup from './CreateGroup.vue'
 
 const searchQuery = ref('')
 const chatStore = useChatStore()
@@ -233,14 +237,18 @@ const handleSelectOption = async (option) => {
 const onMenuClickedOutside = () => {
   contextMenu.value.show = false
 }
+// 添加菜单的逻辑
+const showAddFriend = ref(false)
+const showAddGroup = ref(false)
+const showCreateGroup = ref(false)
 // 添加菜单的选项
 const handleAddMenu = (option)=> {
   if(option === '添加好友') {
-    // 添加好友逻辑
+    showAddFriend.value = true
   } else if(option === '添加群聊') {
-    // 添加群聊逻辑
+    showAddGroup.value = true
   } else if(option === '创建群聊') {
-    // 创建群聊逻辑
+    showCreateGroup.value = true
   }
 }
 
@@ -347,6 +355,21 @@ onBeforeMount(() => {
       @select="handleSelectOption"
       :on-clickoutside="onMenuClickedOutside"
     />
+    <!--模态-->
+    <n-modal-provider>
+      <!--添加好友-->
+      <n-modal v-model:show="showAddFriend">
+        <AddFriend />
+      </n-modal>
+      <!--添加群聊-->
+      <n-modal v-model:show="showAddGroup">
+        <AddGroup />
+      </n-modal>
+      <!--创建群聊-->
+      <n-modal v-model:show="showCreateGroup">
+        <CreateGroup />
+      </n-modal>
+    </n-modal-provider>
   </div>
 </template>
 

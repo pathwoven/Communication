@@ -3,7 +3,6 @@ package chat
 import (
 	"Communication/internal/repository"
 	"Communication/internal/repository/model"
-	"Communication/internal/utils"
 	"log"
 	"net/http"
 
@@ -13,11 +12,7 @@ import (
 func GetTagListHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 查询tag表
 	var dbTags []model.ChatTag
 	result := repository.DB.Where("user_id = ?", userID).Find(&dbTags)
@@ -39,11 +34,7 @@ func GetTagListHandler(c *gin.Context) {
 func CreateTagHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 获取tag_name
 	var input struct {
 		TagName string `json:"tag_name"`
@@ -77,11 +68,7 @@ func CreateTagHandler(c *gin.Context) {
 func DeleteTagHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 获取tag_name
 	tagName := c.Param("tag_name")
 	// 查询tag表
@@ -105,11 +92,7 @@ func DeleteTagHandler(c *gin.Context) {
 func RenameTagHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	var input struct {
 		OldTagName string `json:"old_tag_name"`
 		NewTagName string `json:"new_tag_name"`

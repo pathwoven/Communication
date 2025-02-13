@@ -4,6 +4,7 @@ import (
 	"Communication/internal/api/handler/auth"
 	"Communication/internal/api/handler/chat"
 	"Communication/internal/api/handler/ws"
+	"Communication/internal/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +27,7 @@ func SetupRouter(r *gin.Engine) {
 			// 聊天
 			chatGroup := v1.Group("/chat")
 			{
+				chatGroup.Use(middleware.AuthMiddleWare())
 				listGroup := chatGroup.Group("/list")
 				{
 					listGroup.GET("", chat.GetChatListHandler)

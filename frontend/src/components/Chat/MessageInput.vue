@@ -19,10 +19,16 @@ const newMessage = ref('')
 // 发送文本消息，0为文本类型
 const sendTextMessage = async () => {
   let response;
+  var formData = new FormData()
+  formData.append('receiver_id', receiver_id)
+  formData.append('content', newMessage.value)
+  formData.append('content_type', 0)
+  formData.append('operation', operation)
+  formData.append('op_message_id', op_message_id)
   if(isGroup){
-    response = await chatApi.sendGroupMessage(receiver_id,newMessage.value, 0, operation,op_message_id)
+    response = await chatApi.sendGroupMessage(formData)
   }else{
-    response = await chatApi.sendSingleMessage(receiver_id,newMessage.value, 0,operation,op_message_id)
+    response = await chatApi.sendSingleMessage(formData)
   }
   if(!response.success){
     console.log('发送消息失败')   // 提醒 todo

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,11 +18,7 @@ import (
 func GetMessagesHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 绑定参数
 	var input struct { // note: 注意，go会把零值当作没有传值，所以验证的时候要小心
 		TargetID uint32 `json:"target_id" binding:"required"`
@@ -53,23 +50,33 @@ func GetMessagesHandler(c *gin.Context) {
 func SendSingleMessageHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 绑定参数
 	var input struct {
-		ReceiverID  uint32  `json:"receiver_id" binding:"required"`
-		Content     string  `json:"content" binding:"required"`
-		ContentType *uint8  `json:"content_type" binding:"required"`
-		Operation   *uint8  `json:"operation"`
-		OpMessageID *uint32 `json:"op_message_id"`
+		ReceiverID  uint32  `form:"receiver_id"`
+		ContentType uint8   `form:"content_type" `
+		Operation   *uint8  `form:"operation"`
+		OpMessageID *uint32 `form:"op_message_id"`
 	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Println("参数错误: ", err)
+
+	if err := c.ShouldBind(&input); err != nil {
+		log.Println("参数错误", err)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
 		return
+	}
+	var content string
+	// 文件类型
+	if input.ContentType == 2 {
+		// 获取文件并保存
+		filename, err := utils.HandleFileUpload(c, "content", "messages")
+		if err != nil {
+			log.Println("无法保存文件", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+			return
+		}
+		content = filepath.Join("messages", filename)
+	} else {
+		content = c.PostForm("content") // todo
 	}
 	// 修改数据库
 	// 开始事务
@@ -110,8 +117,8 @@ func SendSingleMessageHandler(c *gin.Context) {
 	var message model.Message
 	message.SenderID = userID
 	message.ReceiverID = input.ReceiverID
-	message.Content = input.Content
-	message.ContentType = *input.ContentType
+	message.Content = content
+	message.ContentType = input.ContentType
 	message.CreateTime = time.Now()
 	if input.Operation != nil {
 		message.Operation = *input.Operation
@@ -128,15 +135,14 @@ func SendSingleMessageHandler(c *gin.Context) {
 	}
 	// 更新chat表
 	var lastMessage string
-	if message.ContentType == 1 {
-		lastMessage = "[图片]"
-	} else if message.ContentType == 2 {
-		lastMessage = "[文件]"
-	} else if message.ContentType == 3 {
-		lastMessage = "[群投票]"
-	} else if message.ContentType == 4 {
-		lastMessage = "[聊天记录]"
-	} else {
+	lastMessage, err := convertLastMessage(input.ContentType)
+	if err != nil {
+		log.Println("无法转化last_message", err)
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+	if lastMessage == "" {
 		lastMessage = message.Content
 	}
 	// 查询发送者的chat表
@@ -259,11 +265,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 func SendGroupMessageHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID, ok := utils.GetUserID(c.Request)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
-		return
-	}
+	userID := c.MustGet("user_id").(uint32)
 	// 绑定参数
 	var input struct {
 		GroupID     uint32  `json:"group_id" binding:"required"`
@@ -329,15 +331,14 @@ func SendGroupMessageHandler(c *gin.Context) {
 	}
 	// 更新chat表
 	var lastMessage string
-	if message.ContentType == 1 {
-		lastMessage = "[图片]"
-	} else if message.ContentType == 2 {
-		lastMessage = "[文件]"
-	} else if message.ContentType == 3 {
-		lastMessage = "[群投票]"
-	} else if message.ContentType == 4 {
-		lastMessage = "[聊天记录]"
-	} else {
+	lastMessage, err := convertLastMessage(input.ContentType)
+	if err != nil {
+		log.Println("无法转化last_message", err)
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+	if lastMessage == "" {
 		lastMessage = message.Content
 	}
 	// 查询发送者的chat表
