@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -58,26 +58,12 @@ func SendSingleMessageHandler(c *gin.Context) {
 		Operation   *uint8  `form:"operation"`
 		OpMessageID *uint32 `form:"op_message_id"`
 	}
-
-	if err := c.ShouldBind(&input); err != nil {
+	if err := c.Bind(&input); err != nil {
 		log.Println("参数错误", err)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
 		return
 	}
 	var content string
-	// 文件类型
-	if input.ContentType == 2 {
-		// 获取文件并保存
-		filename, err := utils.HandleFileUpload(c, "content", "messages")
-		if err != nil {
-			log.Println("无法保存文件", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
-			return
-		}
-		content = filepath.Join("messages", filename)
-	} else {
-		content = c.PostForm("content") // todo
-	}
 	// 修改数据库
 	// 开始事务
 	tx := repository.DB.Begin()
@@ -113,22 +99,43 @@ func SendSingleMessageHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "对方已将您拉黑"})
 		return
 	}
-	// 保存至message表
-	var message model.Message
-	message.SenderID = userID
-	message.ReceiverID = input.ReceiverID
-	message.Content = content
-	message.ContentType = input.ContentType
-	message.CreateTime = time.Now()
+	// 保存至dbMessage表
+	var dbMessage model.Message
+	dbMessage.SenderID = userID
+	dbMessage.ReceiverID = input.ReceiverID
+	dbMessage.ContentType = input.ContentType
+	dbMessage.CreateTime = time.Now()
 	if input.Operation != nil {
-		message.Operation = *input.Operation
+		dbMessage.Operation = *input.Operation
 	}
 	if input.OpMessageID != nil {
-		message.OpMessageID = *input.OpMessageID
+		dbMessage.OpMessageID = *input.OpMessageID
 	}
-	result = tx.Create(&message)
+	result = tx.Create(&dbMessage)
 	if result.Error != nil {
 		log.Println("无法保存message", result.Error)
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+	// 处理content
+	// 文件类型
+	if input.ContentType == 2 {
+		// 获取文件并保存
+		fileID, err := utils.HandleFileUpload(c, "content", "messages")
+		if err != nil {
+			log.Println("无法保存文件", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+			tx.Rollback()
+			return
+		}
+		content = strconv.Itoa(int(fileID))
+	} else {
+		content = c.PostForm("content")
+	}
+	dbMessage.Content = content
+	if result = tx.Save(&dbMessage); result.Error != nil {
+		log.Println("无法更新message", result.Error)
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
 		return
@@ -143,7 +150,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 		return
 	}
 	if lastMessage == "" {
-		lastMessage = message.Content
+		lastMessage = dbMessage.Content
 	}
 	// 查询发送者的chat表
 	var dbChat model.Chat
@@ -160,7 +167,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "聊天已被删除"})
 		return
 	}
-	dbChat.LastTime = &message.CreateTime
+	dbChat.LastTime = &dbMessage.CreateTime
 	dbChat.LastMessage = lastMessage
 	dbChat.LastPerson = ""
 	result = tx.Save(&dbChat)
@@ -200,7 +207,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 		isNewChat = true
 		dbChat.IsDeleted = false
 	}
-	dbChat.LastTime = &message.CreateTime
+	dbChat.LastTime = &dbMessage.CreateTime
 	dbChat.LastMessage = lastMessage
 	// 填写last_person（对方对我的备注、昵称）
 	var last_person string
@@ -233,7 +240,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 	// 提交事务
 	tx.Commit()
 	// 返回数据
-	c.JSON(http.StatusOK, gin.H{"data": gin.H{"id": message.ID, "create_time": message.CreateTime}})
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"id": dbMessage.ID, "create_time": dbMessage.CreateTime}})
 	// websocket推送(message或chatAndMessage)
 	if isNewChat {
 		// todo
@@ -241,7 +248,7 @@ func SendSingleMessageHandler(c *gin.Context) {
 		var newData = map[string]interface{}{
 			"type": "message",
 			"data": map[string]interface{}{
-				"message": message,
+				"message": dbMessage,
 				"chat": map[string]interface{}{
 					"last_message": lastMessage,
 					"last_person":  last_person,
@@ -450,4 +457,42 @@ func SendGroupMessageHandler(c *gin.Context) {
 
 		}
 	}
+}
+
+func DownloadMessageFileHandler(c *gin.Context) {
+	// 获取参数
+
+	var input struct {
+		MessageID uint32 `json:"message_id"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
+		return
+	}
+	// 查询数据库
+	// 查询message，得到fileID
+	var dbMessage model.Message
+	result := repository.DB.Select("content, content_type").Where("id = ?", input.MessageID).First(&dbMessage)
+	if result.Error != nil {
+		log.Println("无法获取message对应的文件", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+	if dbMessage.ContentType != 2 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "消息不是文件类型"})
+		return
+	}
+	// 根据fileID查询file表
+	fileID, err := strconv.Atoi(dbMessage.Content)
+	if err != nil {
+		log.Println("无法转换文件ID", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+	if err = utils.HandleFileDownload(c, uint32(fileID)); err != nil {
+		log.Println("无法上传文件", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "服务器错误"})
+		return
+	}
+
 }

@@ -52,6 +52,7 @@ func SetupRouter(r *gin.Engine) {
 					messageGroup.POST("/list", chat.GetMessagesHandler)
 					messageGroup.POST("/single/send", chat.SendSingleMessageHandler)
 					messageGroup.POST("/group/send", chat.SendGroupMessageHandler)
+					messageGroup.POST("/download/file", chat.DownloadMessageFileHandler)
 				}
 			}
 		}

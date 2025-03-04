@@ -3,6 +3,7 @@ package chat
 import (
 	"Communication/internal/repository"
 	"Communication/internal/repository/model"
+	"Communication/internal/utils"
 	"log"
 	"net/http"
 
@@ -13,7 +14,11 @@ import (
 func GetChatListHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 查询数据库
 	// 查询chat表，不显示已删除的聊天
 	var dbChats []model.Chat
@@ -99,7 +104,11 @@ func GetChatListHandler(c *gin.Context) {
 func CreateChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取目标用户id
 	var input struct {
 		TargetID uint32 `json:"target_id"`
@@ -169,7 +178,11 @@ func CreateChatHandler(c *gin.Context) {
 func DeleteChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID uint `json:"chat_id"`
@@ -205,7 +218,11 @@ func DeleteChatHandler(c *gin.Context) {
 func PinChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID       uint `json:"chat_id"`
@@ -242,7 +259,11 @@ func PinChatHandler(c *gin.Context) {
 func MuteChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID      uint `json:"chat_id"`
@@ -279,7 +300,11 @@ func MuteChatHandler(c *gin.Context) {
 func BlockChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID        uint `json:"chat_id"`
@@ -316,7 +341,11 @@ func BlockChatHandler(c *gin.Context) {
 func ReadChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID     uint `json:"chat_id"`
@@ -357,7 +386,11 @@ func ReadChatHandler(c *gin.Context) {
 func AddTagToChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID      uint   `json:"chat_id"`
@@ -409,7 +442,11 @@ func AddTagToChatHandler(c *gin.Context) {
 func RemoveTagFromChatHandler(c *gin.Context) {
 	// 获取参数
 	// 获取user_id
-	userID := c.MustGet("user_id").(uint32)
+	userID, ok := utils.GetUserID(c.Request)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "登录信息失效"})
+		return
+	}
 	// 获取chat_id
 	var input struct {
 		ID      uint   `json:"chat_id"`

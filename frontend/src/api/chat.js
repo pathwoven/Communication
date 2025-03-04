@@ -221,7 +221,7 @@ export const sendSingleMessage = async (formData) => {
     for(var pair of formData.entries()) {
       console.log(pair[0]+ ', '+ pair[1]);
     }
-    const response = await apiClient.post(`/api/v1/chat/message/single/send`, { formData}, {headers: {'Content-Type': 'multipart/form-data'}});
+    const response = await apiClient.post(`/api/v1/chat/message/single/send`,  formData, {headers: {'Content-Type': 'multipart/form-data'}});
     if (response.status !== 200) {
       console.log('发送消息失败:', response.data.message);
       return { success: false, data: null };
@@ -236,7 +236,7 @@ export const sendSingleMessage = async (formData) => {
 // 发送群消息
 export const sendGroupMessage = async (formData ) => {
   try {
-    const response = await apiClient.post(`/api/v1/chat/message/group/send`, {formData}, {headers: {'Content-Type': 'multipart/form-data'}});
+    const response = await apiClient.post(`/api/v1/chat/message/group/send`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
     if (response.status !== 200) {
       console.log('发送消息失败:', response.data.message);
       return { success: false, data: null };
@@ -246,5 +246,20 @@ export const sendGroupMessage = async (formData ) => {
   } catch (error) {
     console.error('发送消息失败:', error);
     return { success: false, data: null };
+  }
+}
+// 下载消息文件
+export const downloadMessageFile = async(message_id)=>{
+  try{
+    const response = await apiClient.post('/api/v1/chat/message/download/file', {message_id});
+    if(response.status!==200){
+      console.error('下载失败', response.data.message);
+      return {success:false, data:null}
+    } else {
+      return {success:true, data:{file: response.data, contentType: response.headers.get('Content-Type')}}
+    }
+  } catch (e){
+    console.error('下载失败', e)
+    return {success:false, data:null}
   }
 }
