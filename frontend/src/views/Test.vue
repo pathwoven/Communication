@@ -23,7 +23,7 @@ const testFile = async() =>{
   let blob = new Blob([response.data.file], {type: response.data.contentType})
   console.log(blob)
   linkRef.value.href = URL.createObjectURL(blob)
-  linkRef.value.download = "121.jpg"
+  linkRef.value.download = response.data.name
   linkRef.value.click()
 }
 </script>

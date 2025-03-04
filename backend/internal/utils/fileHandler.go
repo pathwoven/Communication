@@ -56,8 +56,9 @@ func HandleFileDownload(c *gin.Context, id uint32) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	c.Header("Content-Disposition", "inline; filename="+dbFile.Name)
-	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+dbFile.Name)
+	// c.Header("Content-Type", "application/octet-stream")
+	c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Disposition") // note: 要设置Access-Control-Expose-Headers，前端才能访问该字段
 	c.File(dbFile.Path)
 
 	return nil

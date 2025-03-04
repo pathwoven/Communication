@@ -251,12 +251,17 @@ export const sendGroupMessage = async (formData ) => {
 // 下载消息文件
 export const downloadMessageFile = async(message_id)=>{
   try{
-    const response = await apiClient.post('/api/v1/chat/message/download/file', {message_id});
+    // note:一定要加上responseType:"blob"，不然无法正确下载
+    const response = await apiClient.post('/api/v1/chat/message/download/file', {message_id}, {responseType:"blob"});  
     if(response.status!==200){
       console.error('下载失败', response.data.message);
       return {success:false, data:null}
     } else {
-      return {success:true, data:{file: response.data, contentType: response.headers.get('Content-Type')}}
+      console.log(response.headers)
+      let name = response.headers.get('Content-Disposition');
+      console.log(name)
+      name = name.substring(name.indexOf('=')+1);
+      return {success:true, data:{file: response.data, contentType: response.headers.get('Content-Type'), name: name}}
     }
   } catch (e){
     console.error('下载失败', e)
